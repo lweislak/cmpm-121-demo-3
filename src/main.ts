@@ -1,6 +1,6 @@
 import "./style.css";
 
-const APP_NAME = "Geocoin Carrier";
+const APP_NAME = "D3: Geocoin Carrier";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 document.title = APP_NAME;
 
