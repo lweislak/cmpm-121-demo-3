@@ -47,13 +47,13 @@ leaflet
 
 // Add a marker to represent the player
 const playerMarker = leaflet.marker(OAKES_CLASSROOM);
-playerMarker.bindTooltip("That's you!");
+playerMarker.bindTooltip("You are here");
 playerMarker.addTo(map);
 
 // Display the player's points
 let playerPoints = 0;
 const statusPanel = document.querySelector<HTMLDivElement>("#statusPanel")!; // element `statusPanel` is defined in index.html
-statusPanel.innerHTML = "No points yet...";
+statusPanel.innerHTML = `Points: ${playerPoints}`;
 
 // Add caches to the map by cell numbers
 function spawnCache(i: number, j: number) {
@@ -82,17 +82,32 @@ function spawnCache(i: number, j: number) {
                 <button id="deposit">Deposit</button>`;
 
     // Clicking the button decrements the cache's value and increments the player's points
-    popupDiv
-      .querySelector<HTMLButtonElement>("#collect, #deposit")!
-      .addEventListener("click", () => {
+    popupDiv.querySelector<HTMLButtonElement>("#collect")!.addEventListener(
+      "click",
+      () => {
         if (pointValue > 0) {
           pointValue--;
           popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML =
             pointValue.toString();
           playerPoints++;
-          statusPanel.innerHTML = `${playerPoints} points accumulated`;
+          statusPanel.innerHTML = `Points: ${playerPoints}`;
         }
-      });
+      },
+    );
+
+    // Clicking the button increments the cache's value and decrements the player's points
+    popupDiv.querySelector<HTMLButtonElement>("#deposit")!.addEventListener(
+      "click",
+      () => {
+        if (playerPoints > 0) {
+          playerPoints--;
+          pointValue++;
+          popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML =
+            pointValue.toString();
+          statusPanel.innerHTML = `Points: ${playerPoints}`;
+        }
+      },
+    );
     return popupDiv;
   });
 }
