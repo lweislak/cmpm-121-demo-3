@@ -44,8 +44,9 @@ h1 {
 }
 
 #map {
-  width: 100%;
-  height: 80vh;
+  width: 95%;
+  height: 90vh;
+  margin: auto;
 }
 
 button {
@@ -55,7 +56,7 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: lightgray;
   cursor: pointer;
   transition: border-color 0.25s;
 }
