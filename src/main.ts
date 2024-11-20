@@ -12,14 +12,14 @@ import "./style.css";
 import "./leafletWorkaround.ts";
 import luck from "./luck.ts";
 
-//import { Board } from "./board.ts";
+import { Board } from "./board.ts";
 
 const OAKES_CLASSROOM = leaflet.latLng(36.98949379578401, -122.06277128548504);
 const GAMEPLAY_ZOOM_LEVEL = 19;
 const TILE_DEGREES = 1e-4;
 const NEIGHBORHOOD_SIZE = 8;
 const CACHE_SPAWN_PROBABILITY = 0.1;
-//const board = new Board(TILE_DEGREES, NEIGHBORHOOD_SIZE);
+const board = new Board(TILE_DEGREES, NEIGHBORHOOD_SIZE);
 
 const map = leaflet.map(document.getElementById("map")!, {
   center: OAKES_CLASSROOM,
@@ -51,13 +51,7 @@ statusPanel.innerHTML = `Points: ${playerPoints}`;
 
 // Add caches to the map by cell numbers
 function spawnCache(i: number, j: number) {
-  // Convert cell numbers into lat/lng bounds
-  const origin = OAKES_CLASSROOM;
-  //NOTE: Moved bounds code to getCellBounds in board.ts
-  const bounds = leaflet.latLngBounds([
-    [origin.lat + i * TILE_DEGREES, origin.lng + j * TILE_DEGREES],
-    [origin.lat + (i + 1) * TILE_DEGREES, origin.lng + (j + 1) * TILE_DEGREES],
-  ]);
+  const bounds = board.getCellBounds({ i, j });
 
   // Add a rectangle to the map to represent the cache
   const rect = leaflet.rectangle(bounds);
@@ -104,12 +98,8 @@ function spawnCache(i: number, j: number) {
   });
 }
 
-// Look around the player's neighborhood for caches to spawn
-for (let i = -NEIGHBORHOOD_SIZE; i < NEIGHBORHOOD_SIZE; i++) {
-  for (let j = -NEIGHBORHOOD_SIZE; j < NEIGHBORHOOD_SIZE; j++) {
-    // If location i,j is lucky enough, spawn a cache!
-    if (luck([i, j].toString()) < CACHE_SPAWN_PROBABILITY) {
-      spawnCache(i, j);
-    }
+board.getCellsNearPoint(OAKES_CLASSROOM).forEach((cell) => {
+  if (luck([cell.i, cell.j].toString()) < CACHE_SPAWN_PROBABILITY) {
+    spawnCache(cell.i, cell.j);
   }
-}
+});
