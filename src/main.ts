@@ -5,7 +5,8 @@ const APP_NAME = "D3: Geocoin Carrier";
 document.title = APP_NAME;
 
 // @deno-types="npm:@types/leaflet@^1.9.14"
-import leaflet from "leaflet";
+// deno-lint-ignore no-unused-vars
+import leaflet, { LatLngBounds } from "leaflet";
 
 import "leaflet/dist/leaflet.css";
 import "./style.css";
@@ -44,10 +45,20 @@ const playerMarker = leaflet.marker(OAKES_CLASSROOM);
 playerMarker.bindTooltip("You are here");
 playerMarker.addTo(map);
 
-// Display the player's points
-let playerPoints = 0;
+// Display the player's coins
 const statusPanel = document.querySelector<HTMLDivElement>("#statusPanel")!;
-statusPanel.innerHTML = `Points: ${playerPoints}`;
+statusPanel.innerHTML = "No coins yet";
+
+interface Coin {
+  readonly i: number;
+  readonly j: number;
+  readonly serial: number;
+}
+
+interface Inventory {
+  playerCoins: Coin[];
+}
+const playerInventory: Inventory = { playerCoins: [] };
 
 // Add caches to the map by cell numbers
 function spawnCache(i: number, j: number) {
@@ -59,43 +70,87 @@ function spawnCache(i: number, j: number) {
 
   // Handle interactions with the cache
   rect.bindPopup(() => {
-    let pointValue = Math.floor(luck([i, j, "initialValue"].toString()) * 5);
+    const numCoins = Math.floor(luck([i, j, "initialValue"].toString()) * 5);
+    const coins = getCoins(i, j, numCoins);
 
     const popupDiv = document.createElement("div");
     popupDiv.innerHTML = `
-                <div>Location: ("${i},${j}"). Points avaliable: <span id="value">${pointValue}</span></div>
+                <div>Location: (${i} : ${j}), Number of coins: <span id="value">${coins.length}</span></div>
                 <button id="collect">Collect</button>
                 <button id="deposit">Deposit</button>`;
 
-    // Clicking the button decrements the cache's value and increments the player's points
+    //Coins are clickable buttons
+    /*
+    coins.forEach((coin) => {
+      //popupDiv.append(`<button id="coin">(${coin.i} : ${coin.j}) #${coin.serial}</button>`);
+      const button = document.createElement("button");
+      button.innerHTML = `(${coin.i} : ${coin.j}) #${coin.serial}`;
+      popupDiv.appendChild(button);
+      button.addEventListener("click", () => {
+        if (coins.length > 0) {
+          coins.splice(coins.indexOf(coin), 1);
+          playerInventory.playerCoins.push(coin);
+          updateStatusPanel();
+        }
+      });
+    });
+    */
+
+    // Clicking the button decrements the cache's value and increments the player's coins
     popupDiv.querySelector<HTMLButtonElement>("#collect")!.addEventListener(
       "click",
       () => {
-        if (pointValue > 0) {
-          pointValue--;
-          popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML =
-            pointValue.toString();
-          playerPoints++;
-          statusPanel.innerHTML = `Points: ${playerPoints}`;
+        if (coins.length > 0) {
+          playerInventory.playerCoins.push(coins.pop()!);
+          updateStatusPanel();
+          updatePopup(coins);
         }
       },
     );
 
-    // Clicking the button increments the cache's value and decrements the player's points
+    // Clicking the button increments the cache's value and decrements the player's coins
     popupDiv.querySelector<HTMLButtonElement>("#deposit")!.addEventListener(
       "click",
       () => {
-        if (playerPoints > 0) {
-          playerPoints--;
-          pointValue++;
-          popupDiv.querySelector<HTMLSpanElement>("#value")!.innerHTML =
-            pointValue.toString();
-          statusPanel.innerHTML = `Points: ${playerPoints}`;
+        if (playerInventory.playerCoins.length > 0) {
+          coins.push(playerInventory.playerCoins.pop()!);
+          updateStatusPanel();
+          updatePopup(coins);
         }
       },
     );
     return popupDiv;
   });
+}
+
+//Return array of avaliable coins in cache
+function getCoins(ci: number, cj: number, numCoins: number): Coin[] {
+  const coins: Coin[] = [];
+  Array.from({ length: numCoins }, (_, i) => {
+    const coin: Coin = {
+      i: ci,
+      j: cj,
+      serial: i,
+    };
+    coins.push(coin);
+  });
+  return coins;
+}
+
+//This is so janky
+//Update display of coins in player's inventory
+function updateStatusPanel() {
+  let currInventory = "";
+  if (playerInventory.playerCoins.length <= 0) currInventory = "No coins yet";
+  playerInventory.playerCoins.forEach((coin) => {
+    currInventory += `(${coin.i}, ${coin.j} #${coin.serial}) `;
+  });
+  statusPanel.innerHTML = currInventory;
+}
+
+function updatePopup(coins: Coin[]) {
+  document.querySelector<HTMLSpanElement>("#value")!.innerHTML = coins.length
+    .toString();
 }
 
 board.getCellsNearPoint(OAKES_CLASSROOM).forEach((cell) => {

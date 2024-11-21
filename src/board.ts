@@ -1,6 +1,6 @@
 import leaflet from "leaflet";
 
-interface Cell {
+export interface Cell { //Maybe don't export?
   readonly i: number;
   readonly j: number;
 }
