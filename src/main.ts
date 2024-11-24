@@ -14,6 +14,7 @@ import "./leafletWorkaround.ts";
 import luck from "./luck.ts";
 
 import { Board } from "./board.ts";
+import { Cell } from "./board.ts";
 
 const OAKES_CLASSROOM = leaflet.latLng(36.98949379578401, -122.06277128548504);
 const GAMEPLAY_ZOOM_LEVEL = 19;
@@ -58,11 +59,47 @@ interface Coin {
 interface Inventory {
   playerCoins: Coin[];
 }
+
+interface Memento {
+  toMemento(): string;
+  fromMemento(memento: string): void;
+}
+
+interface Cache extends Memento {
+  coins: Coin[];
+}
+
+function createCache(_cell: Cell, coins: Coin[]): Cache {
+  return {
+    coins,
+    toMemento() {
+      return JSON.stringify(this.coins);
+    },
+    fromMemento(memento: string) {
+      this.coins = JSON.parse(memento);
+    },
+  };
+}
+
 const playerInventory: Inventory = { playerCoins: [] };
+const mementos: Map<Cell, string> = new Map();
 
 // Add caches to the map by cell numbers
 function spawnCache(i: number, j: number) {
   const bounds = board.getCellBounds({ i, j });
+  const numCoins = Math.floor(luck([i, j, "initialValue"].toString()) * 5);
+
+  let cache: Cache;
+  const cell: Cell = { i: i, j: j };
+
+  if (mementos.has(cell)) {
+    cache = createCache(cell, []);
+    cache.fromMemento(mementos.get(cell)!);
+  } else {
+    const coins = getCoins(i, j, numCoins);
+    cache = createCache(cell, coins);
+    mementos.set(cell, cache.toMemento());
+  }
 
   // Add a rectangle to the map to represent the cache
   const rect = leaflet.rectangle(bounds);
@@ -70,40 +107,21 @@ function spawnCache(i: number, j: number) {
 
   // Handle interactions with the cache
   rect.bindPopup(() => {
-    const numCoins = Math.floor(luck([i, j, "initialValue"].toString()) * 5);
-    const coins = getCoins(i, j, numCoins);
-
     const popupDiv = document.createElement("div");
     popupDiv.innerHTML = `
-                <div>Location: (${i} : ${j}), Number of coins: <span id="value">${coins.length}</span></div>
+                <div>Location: (${i} : ${j}), Number of coins: <span id="value">${cache.coins.length}</span></div>
                 <button id="collect">Collect</button>
                 <button id="deposit">Deposit</button>`;
-
-    //Coins are clickable buttons
-    /*
-    coins.forEach((coin) => {
-      //popupDiv.append(`<button id="coin">(${coin.i} : ${coin.j}) #${coin.serial}</button>`);
-      const button = document.createElement("button");
-      button.innerHTML = `(${coin.i} : ${coin.j}) #${coin.serial}`;
-      popupDiv.appendChild(button);
-      button.addEventListener("click", () => {
-        if (coins.length > 0) {
-          coins.splice(coins.indexOf(coin), 1);
-          playerInventory.playerCoins.push(coin);
-          updateStatusPanel();
-        }
-      });
-    });
-    */
 
     // Clicking the button decrements the cache's value and increments the player's coins
     popupDiv.querySelector<HTMLButtonElement>("#collect")!.addEventListener(
       "click",
       () => {
-        if (coins.length > 0) {
-          playerInventory.playerCoins.push(coins.pop()!);
+        if (cache.coins.length > 0) {
+          playerInventory.playerCoins.push(cache.coins.pop()!);
           updateStatusPanel();
-          updatePopup(coins);
+          updatePopup(cache.coins);
+          //mementos.set(cell, cache.toMemento());
         }
       },
     );
@@ -113,9 +131,10 @@ function spawnCache(i: number, j: number) {
       "click",
       () => {
         if (playerInventory.playerCoins.length > 0) {
-          coins.push(playerInventory.playerCoins.pop()!);
+          cache.coins.push(playerInventory.playerCoins.pop()!);
           updateStatusPanel();
-          updatePopup(coins);
+          updatePopup(cache.coins);
+          //mementos.set(cell, cache.toMemento());
         }
       },
     );
