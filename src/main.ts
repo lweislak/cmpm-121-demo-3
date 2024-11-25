@@ -104,7 +104,7 @@ function spawnCache(i: number, j: number) {
     mementos.set(cell, cache.toMemento());
   }
 
-  // Add a rectangle to the map to represent the cache
+  //Rectangle represents the cache
   const rect = leaflet.rectangle(bounds);
   cacheLayer.addLayer(rect);
   //rect.addTo(map);
@@ -169,11 +169,13 @@ function updateStatusPanel() {
   statusPanel.innerHTML = currInventory;
 }
 
+//Update cache popup when coins are deposited/withdrawn
 function updatePopup(coins: Coin[]) {
   document.querySelector<HTMLSpanElement>("#value")!.innerHTML = coins.length
     .toString();
 }
 
+//Clear caches and update based on player's new location
 function updateCaches(currLocation: Cell) {
   cacheLayer.clearLayers();
 
@@ -185,6 +187,7 @@ function updateCaches(currLocation: Cell) {
   });
 }
 
+//Update player's location on the map
 function updatePlayerLocation(currLocation: Cell) {
   const updateLocation = leaflet.latLng(
     currLocation.i * TILE_DEGREES,
