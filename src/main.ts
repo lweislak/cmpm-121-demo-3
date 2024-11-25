@@ -46,6 +46,9 @@ const playerMarker = leaflet.marker(OAKES_CLASSROOM);
 playerMarker.bindTooltip("You are here");
 playerMarker.addTo(map);
 
+//Add layer to store caches
+const cacheLayer = leaflet.layerGroup().addTo(map);
+
 // Display the player's coins
 const statusPanel = document.querySelector<HTMLDivElement>("#statusPanel")!;
 statusPanel.innerHTML = "No coins yet";
@@ -103,7 +106,8 @@ function spawnCache(i: number, j: number) {
 
   // Add a rectangle to the map to represent the cache
   const rect = leaflet.rectangle(bounds);
-  rect.addTo(map);
+  cacheLayer.addLayer(rect);
+  //rect.addTo(map);
 
   // Handle interactions with the cache
   rect.bindPopup(() => {
@@ -121,7 +125,6 @@ function spawnCache(i: number, j: number) {
           playerInventory.playerCoins.push(cache.coins.pop()!);
           updateStatusPanel();
           updatePopup(cache.coins);
-          //mementos.set(cell, cache.toMemento());
         }
       },
     );
@@ -134,7 +137,6 @@ function spawnCache(i: number, j: number) {
           cache.coins.push(playerInventory.playerCoins.pop()!);
           updateStatusPanel();
           updatePopup(cache.coins);
-          //mementos.set(cell, cache.toMemento());
         }
       },
     );
@@ -172,6 +174,28 @@ function updatePopup(coins: Coin[]) {
     .toString();
 }
 
+function updateCaches(currLocation: Cell) {
+  cacheLayer.clearLayers();
+
+  const cellsInRange = board.getCellsNearPoint(currLocation);
+  cellsInRange.forEach((cell) => {
+    if (luck([cell.i, cell.j].toString()) < CACHE_SPAWN_PROBABILITY) {
+      spawnCache(cell.i, cell.j);
+    }
+  });
+}
+
+function updatePlayerLocation(currLocation: Cell) {
+  const updateLocation = leaflet.latLng(
+    currLocation.i * TILE_DEGREES,
+    currLocation.j * TILE_DEGREES,
+  );
+  playerMarker.setLatLng(updateLocation);
+  map.setView(updateLocation, GAMEPLAY_ZOOM_LEVEL);
+
+  updateCaches(updateLocation);
+}
+
 function setupControlPanelButtons() {
   const controlPanelButtons =
     document.querySelector<HTMLDivElement>("#controlPanel")!.children;
@@ -194,20 +218,5 @@ function setupControlPanelButtons() {
     updatePlayerLocation(currLocation);
   });
 }
-
-function updatePlayerLocation(currLocation: Cell) {
-  const newLocation = leaflet.latLng(
-    currLocation.i * TILE_DEGREES,
-    currLocation.j * TILE_DEGREES,
-  );
-  playerMarker.setLatLng(newLocation);
-  map.setView(newLocation, GAMEPLAY_ZOOM_LEVEL);
-}
-
-board.getCellsNearPoint(OAKES_CLASSROOM).forEach((cell) => {
-  if (luck([cell.i, cell.j].toString()) < CACHE_SPAWN_PROBABILITY) {
-    spawnCache(cell.i, cell.j);
-  }
-});
 
 setupControlPanelButtons();
