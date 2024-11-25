@@ -172,8 +172,42 @@ function updatePopup(coins: Coin[]) {
     .toString();
 }
 
+function setupControlPanelButtons() {
+  const controlPanelButtons =
+    document.querySelector<HTMLDivElement>("#controlPanel")!.children;
+  let currLocation = board.getCellForPoint(OAKES_CLASSROOM);
+
+  controlPanelButtons[0].addEventListener("click", () => {
+    currLocation = { i: currLocation.i + 1, j: currLocation.j };
+    updatePlayerLocation(currLocation);
+  });
+  controlPanelButtons[1].addEventListener("click", () => {
+    currLocation = { i: currLocation.i - 1, j: currLocation.j };
+    updatePlayerLocation(currLocation);
+  });
+  controlPanelButtons[2].addEventListener("click", () => {
+    currLocation = { i: currLocation.i, j: currLocation.j - 1 };
+    updatePlayerLocation(currLocation);
+  });
+  controlPanelButtons[3].addEventListener("click", () => {
+    currLocation = { i: currLocation.i, j: currLocation.j + 1 };
+    updatePlayerLocation(currLocation);
+  });
+}
+
+function updatePlayerLocation(currLocation: Cell) {
+  const newLocation = leaflet.latLng(
+    currLocation.i * TILE_DEGREES,
+    currLocation.j * TILE_DEGREES,
+  );
+  playerMarker.setLatLng(newLocation);
+  map.setView(newLocation, GAMEPLAY_ZOOM_LEVEL);
+}
+
 board.getCellsNearPoint(OAKES_CLASSROOM).forEach((cell) => {
   if (luck([cell.i, cell.j].toString()) < CACHE_SPAWN_PROBABILITY) {
     spawnCache(cell.i, cell.j);
   }
 });
+
+setupControlPanelButtons();
