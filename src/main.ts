@@ -46,8 +46,9 @@ const playerMarker = leaflet.marker(OAKES_CLASSROOM);
 playerMarker.bindTooltip("You are here");
 playerMarker.addTo(map);
 
-//Add layer to store caches
+//Add layer to store caches and player location history
 const cacheLayer = leaflet.layerGroup().addTo(map);
+const locationHistoryLayer = leaflet.layerGroup().addTo(map);
 
 // Display the player's coins
 const statusPanel = document.querySelector<HTMLDivElement>("#statusPanel")!;
@@ -72,6 +73,10 @@ interface Cache extends Memento {
   coins: Coin[];
 }
 
+const playerInventory: Inventory = { playerCoins: [] };
+const mementos: Map<Cell, string> = new Map();
+const playerLocatonHistory: leaflet.latLng[] = [];
+
 function createCache(_cell: Cell, coins: Coin[]): Cache {
   return {
     coins,
@@ -83,9 +88,6 @@ function createCache(_cell: Cell, coins: Coin[]): Cache {
     },
   };
 }
-
-const playerInventory: Inventory = { playerCoins: [] };
-const mementos: Map<Cell, string> = new Map();
 
 // Add caches to the map by cell numbers
 function spawnCache(i: number, j: number) {
@@ -195,6 +197,11 @@ function updatePlayerLocation(currLocation: Cell) {
   );
   playerMarker.setLatLng(updateLocation);
   map.setView(updateLocation, GAMEPLAY_ZOOM_LEVEL);
+
+  playerLocatonHistory.push(updateLocation);
+  leaflet.polyline(playerLocatonHistory, { color: "red" }).addTo(
+    locationHistoryLayer,
+  );
 
   updateCaches(updateLocation);
 }
