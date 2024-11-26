@@ -206,6 +206,17 @@ function updatePlayerLocation(currLocation: Cell) {
   updateCaches(updateLocation);
 }
 
+//Reset player location information and map/caches
+function resetPlayerInfo(currLocation: Cell) {
+  playerInventory.playerCoins.length = 0;
+  playerLocatonHistory.length = 0;
+  locationHistoryLayer.clearLayers();
+  mementos.clear();
+  cacheLayer.clearLayers();
+  updatePlayerLocation(currLocation);
+  updateStatusPanel();
+}
+
 function setupControlPanelButtons() {
   const controlPanelButtons =
     document.querySelector<HTMLDivElement>("#controlPanel")!.children;
@@ -226,6 +237,17 @@ function setupControlPanelButtons() {
   controlPanelButtons[3].addEventListener("click", () => {
     currLocation = { i: currLocation.i, j: currLocation.j + 1 };
     updatePlayerLocation(currLocation);
+  });
+  controlPanelButtons[4].addEventListener("click", () => {
+    const resetPrompt = prompt("Are you sure you would like to reset? (Y/N)")!
+      .toLowerCase();
+    if (resetPrompt == "y") {
+      currLocation = board.getCellForPoint(OAKES_CLASSROOM);
+      resetPlayerInfo(currLocation);
+    }
+  });
+  controlPanelButtons[5].addEventListener("click", () => {
+    console.log("GAME LOCATION");
   });
 }
 
