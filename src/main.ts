@@ -198,15 +198,22 @@ function updatePlayerLocation(currLocation: Cell) {
     currLocation.i * TILE_DEGREES,
     currLocation.j * TILE_DEGREES,
   );
-  playerMarker.setLatLng(updateLocation);
-  map.setView(updateLocation, GAMEPLAY_ZOOM_LEVEL);
 
-  playerLocatonHistory.push(updateLocation);
+  updatePlayerMarker(updateLocation);
+  updatePlayerHistory(updateLocation);
+  updateCaches(updateLocation);
+}
+
+function updatePlayerMarker(location: leaflet.latLng) {
+  playerMarker.setLatLng(location);
+  map.setView(location, GAMEPLAY_ZOOM_LEVEL);
+}
+
+function updatePlayerHistory(location: leaflet.latLng) {
+  playerLocatonHistory.push(location);
   leaflet.polyline(playerLocatonHistory, { color: "red" }).addTo(
     locationHistoryLayer,
   );
-
-  updateCaches(updateLocation);
 }
 
 //Reset player location information and map/caches
