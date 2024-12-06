@@ -7,6 +7,7 @@ document.title = APP_NAME;
 // @deno-types="npm:@types/leaflet@^1.9.14"
 // deno-lint-ignore no-unused-vars
 import leaflet, { LatLngBounds } from "leaflet";
+//import { MapService } from "./mapService.ts";
 
 import "leaflet/dist/leaflet.css";
 import "./style.css";
