@@ -73,9 +73,10 @@ interface Cache extends Memento {
   coins: Coin[];
 }
 
-const playerInventory: Inventory = { playerCoins: [] };
+let playerInventory: Inventory = { playerCoins: [] };
 const mementos: Map<Cell, string> = new Map();
-const playerLocatonHistory: leaflet.latLng[] = [];
+let playerLocatonHistory: leaflet.latLng[] = [];
+let playerLocation: Cell = OAKES_CLASSROOM;
 
 function createCache(_cell: Cell, coins: Coin[]): Cache {
   return {
@@ -191,6 +192,8 @@ function updateCaches(currLocation: Cell) {
 
 //Update player's location on the map
 function updatePlayerLocation(currLocation: Cell) {
+  //console.log("current location:", currLocation);
+  playerLocation = currLocation;
   const updateLocation = leaflet.latLng(
     currLocation.i * TILE_DEGREES,
     currLocation.j * TILE_DEGREES,
@@ -217,25 +220,50 @@ function resetPlayerInfo(currLocation: Cell) {
   updateStatusPanel();
 }
 
+function saveGame() {
+  const gameInfo = {
+    playerInventory,
+    playerLocatonHistory,
+    playerLocation,
+    mementos,
+  };
+  localStorage.setItem("gameInfo", JSON.stringify(gameInfo));
+}
+
+function loadGame() {
+  const gameInfoJSON = localStorage.getItem("gameInfo");
+  if (gameInfoJSON) {
+    const gameInfo = JSON.parse(gameInfoJSON);
+
+    playerLocatonHistory = gameInfo.playerLocatonHistory;
+    playerLocation = gameInfo.playerLocation;
+    playerInventory = gameInfo.playerInventory;
+    //caches
+  }
+
+  updatePlayerLocation(playerLocation);
+  updateStatusPanel();
+}
+
 function setupControlPanelButtons() {
   const controlPanelButtons =
     document.querySelector<HTMLDivElement>("#controlPanel")!.children;
   let currLocation = board.getCellForPoint(OAKES_CLASSROOM);
 
   controlPanelButtons[0].addEventListener("click", () => {
-    currLocation = { i: currLocation.i + 1, j: currLocation.j };
+    currLocation = { i: playerLocation.i + 1, j: playerLocation.j };
     updatePlayerLocation(currLocation);
   });
   controlPanelButtons[1].addEventListener("click", () => {
-    currLocation = { i: currLocation.i - 1, j: currLocation.j };
+    currLocation = { i: playerLocation.i - 1, j: playerLocation.j };
     updatePlayerLocation(currLocation);
   });
   controlPanelButtons[2].addEventListener("click", () => {
-    currLocation = { i: currLocation.i, j: currLocation.j - 1 };
+    currLocation = { i: playerLocation.i, j: playerLocation.j - 1 };
     updatePlayerLocation(currLocation);
   });
   controlPanelButtons[3].addEventListener("click", () => {
-    currLocation = { i: currLocation.i, j: currLocation.j + 1 };
+    currLocation = { i: playerLocation.i, j: playerLocation.j + 1 };
     updatePlayerLocation(currLocation);
   });
   controlPanelButtons[4].addEventListener("click", () => {
@@ -247,8 +275,11 @@ function setupControlPanelButtons() {
     }
   });
   controlPanelButtons[5].addEventListener("click", () => {
-    console.log("GAME LOCATION");
+    //console.log("GAME LOCATION");
   });
 }
+
+globalThis.addEventListener("beforeunload", saveGame);
+document.addEventListener("DOMContentLoaded", loadGame);
 
 setupControlPanelButtons();
