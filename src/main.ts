@@ -73,10 +73,10 @@ interface Cache extends Memento {
   coins: Coin[];
 }
 
-let playerInventory: Inventory = { playerCoins: [] };
+const playerInventory: Inventory = { playerCoins: [] };
 const mementos: Map<Cell, string> = new Map();
-let playerLocatonHistory: leaflet.latLng[] = [];
-let playerLocation: Cell = OAKES_CLASSROOM;
+const playerLocatonHistory: leaflet.latLng[] = [];
+let playerLocation: Cell = board.getCellForPoint(OAKES_CLASSROOM);
 
 function createCache(_cell: Cell, coins: Coin[]): Cache {
   return {
@@ -219,7 +219,7 @@ function resetPlayerInfo(currLocation: Cell) {
   updatePlayerLocation(currLocation);
   updateStatusPanel();
 }
-
+/*
 function saveGame() {
   const gameInfo = {
     playerInventory,
@@ -244,7 +244,7 @@ function loadGame() {
   updatePlayerLocation(playerLocation);
   updateStatusPanel();
 }
-
+*/
 function setupControlPanelButtons() {
   const controlPanelButtons =
     document.querySelector<HTMLDivElement>("#controlPanel")!.children;
@@ -279,7 +279,7 @@ function setupControlPanelButtons() {
   });
 }
 
-globalThis.addEventListener("beforeunload", saveGame);
-document.addEventListener("DOMContentLoaded", loadGame);
+//globalThis.addEventListener("beforeunload", saveGame);
+//document.addEventListener("DOMContentLoaded", loadGame);
 
 setupControlPanelButtons();
